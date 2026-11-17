@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Display an EPSG:27700 map from Ordnance Survey</title>
+    <meta property="og:description" content="Register the EPSG:27700 (BNG) CRS with addProjection and proj4, and draw WMTS tiles from UK national mapping agency in their native grid." />
+    <meta property="og:category" content="Raster & Imagery" />
+    <meta property="og:created" content="2026-10-09" />
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.css' />
+    <script src='https://unpkg.com/proj4@2.15.0/dist/proj4.js'></script>
+
+    <style>
+        body { margin: 0; padding: 0; }
+        html, body, #map { height: 100%; }
+		
+		#info {
+        display: block;
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translate(-50%);
+        width: 50%;
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+        text-align: center;
+        color: #222;
+        background: #fff;
+        }
+		
+		
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<pre id="info"></pre>
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.mjs';
+
+const apiKey = 'yourkey';
+
+// 1. Define EPSG:27700 (OSGB36 / British National Grid) in proj4
+const epsg27700Def = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs';
+
+const bngProj = proj4('EPSG:4326', epsg27700Def);
+
+
+// 2. Register EPSG:27700 with MapLibre BEFORE creating the map
+maplibregl.addProjection({
+    name: 'EPSG:27700',
+    projection: bngProj,
+    tileMatrixSet: {
+        origin: [-238375.0, 1376256.0],
+        extentAtZoom0: 229376.0 * 8 // 256px tileSize * 896.0 m/px at zoom 3
+    }
+});
+
+// 3. Build the OS WMTS GetTile URL
+const wmtsParams = new URLSearchParams({
+    key: apiKey,
+    service: 'WMTS',
+    request: 'GetTile',
+    version: '2.0.0',
+    style: 'default',
+    layer: 'Leisure_27700',
+    tileMatrixSet: 'EPSG:27700',
+    format: 'image/png',
+    tileMatrix: '{z}',
+    tileRow: '{y}',
+    tileCol: '{x}'
+});
+
+// Unescape {z}, {x}, {y} placeholders after URLSearchParams encoding
+const wmtsUrl = ('https://api.os.uk/maps/raster/v1/wmts?' + wmtsParams.toString())
+    .replace('%7Bz%7D', '{z}')
+    .replace('%7By%7D', '{y}')
+    .replace('%7Bx%7D', '{x}');
+
+// 4. Initialize MapLibre using the custom projection
+const map = new maplibregl.Map({
+    container: 'map',
+    center: [-2.646675, 51.248593], // Standard [lng, lat] still works
+	
+	maxBounds: [
+		[ -10.76418, 49.528423 ],
+		[ 1.9134116, 61.331151 ]
+	],
+	
+	
+    zoom: 6,
+    minZoom: 3, // OS WMTS is 8x8 at zoom 0
+    maxZoom: 9+3,
+	transformRequest: (url, resourceType) => {
+	if (resourceType === 'Tile' && url.startsWith('https://')) {
+	  // shift the zoom level by 3 to match the OS WMTS see 
+	  // https://api.os.uk/maps/raster/v1/wmts?service=WMTS&request=GetCapabilities&version=2.0.0&style=default&layer=Outdoor_27700&key=YourKey
+	  var u = url.replace('tileMatrix=3', 'tileMatrix=0').
+	  replace('tileMatrix=4', 'tileMatrix=1').
+	  replace('tileMatrix=5', 'tileMatrix=2').
+	  replace('tileMatrix=6', 'tileMatrix=3').
+	  replace('tileMatrix=7', 'tileMatrix=4').
+	  replace('tileMatrix=8', 'tileMatrix=5').
+	  replace('tileMatrix=9', 'tileMatrix=6').
+	  replace('tileMatrix=10', 'tileMatrix=7').
+	  replace('tileMatrix=11', 'tileMatrix=8').
+	  replace('tileMatrix=12', 'tileMatrix=9');	  
+	  	  
+	  return {
+	   url: u
+	  }
+	 }
+    },
+    style: {
+        version: 8,
+        projection: {
+            type: 'EPSG:27700'
+        },
+        sources: {
+            'os-leisure': {
+                type: 'raster',
+                tiles: [wmtsUrl],
+                tileSize: 256,
+                minzoom: 0,
+                maxzoom: 12,
+                attribution: 'Contains OS data © Crown copyright and database rights'
+            }
+        },
+        layers: [
+            {
+                id: 'os-leisure-layer',
+                type: 'raster',
+                source: 'os-leisure'
+            }
+        ]
+    }
+
+	
+});
+map.addControl(new maplibregl.NavigationControl());
+map.addControl(new maplibregl.ScaleControl());
+
+
+const popup = new maplibregl.Popup({offset: 25}).setText(
+    'Centre of the universe!'
+);
+
+const marker = new maplibregl.Marker()
+    .setLngLat([-2.646675, 51.248593])// The hunters
+	.setPopup(popup)
+    .addTo(map);
+
+
+map.on('mousemove', (e) => {
+
+	var en = bngProj.forward( [ e.lngLat.lng, e.lngLat.lat ] );
+
+        document.getElementById('info').innerHTML =
+            // e.point is the x, y coordinates of the mousemove event relative
+            // to the top-left corner of the map
+            `${JSON.stringify(e.point)
+            }
+			<br />${
+                // e.lngLat is the longitude, latitude geographical position of the event
+                JSON.stringify(e.lngLat.wrap())}
+			<br />${
+                // e.lngLat is the longitude, latitude geographical position of the event
+                JSON.stringify(en)}`;
+});
+
+// 50.515491,-2.456342
+
+</script>
+</body>
+</html>

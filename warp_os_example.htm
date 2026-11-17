@@ -1,0 +1,40 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.12.1/dist/proj4.js"></script>
+<script src="warped_os_maplibre.js"></script>
+<div id="map" style="position:absolute; inset:0"></div>
+<script>
+  registerWarpedOs(maplibregl, { key: 'yourkey' });
+
+  const map = new maplibregl.Map({
+    container: "map",
+    center: [-2.646675, 51.248593],
+    zoom: 14,
+    style: {
+      version: 8,
+      sources: {
+        os: {
+          type: "raster",
+          tiles: ["wos://{z}/{x}/{y}"],
+          tileSize: 256,
+          minzoom: 6,
+          maxzoom: 16,
+          attribution: "Contains OS data © Crown copyright and database rights"
+        }
+      },
+      layers: [{ id: "os", type: "raster", source: "os" }]
+    }
+  });
+  map.addControl(new maplibregl.NavigationControl());
+  
+  const popup = new maplibregl.Popup({offset: 25}).setText(
+    'Centre of the universe!'
+);
+  
+  const marker = new maplibregl.Marker()
+    .setLngLat([-2.646675, 51.248593])// The hunters
+	.setPopup(popup)
+    .addTo(map);
+  
+  
+</script>
