@@ -7,20 +7,21 @@
     <meta property="og:created" content="2026-10-09" />
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/OrdnanceSurvey/os-api-branding@latest/os-api-branding.css" />
     <link rel='stylesheet' href='https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.css' />
     <script src='https://unpkg.com/proj4@2.15.0/dist/proj4.js'></script>
 
     <style>
-        body { margin: 0; padding: 0; }
-        html, body, #map { height: 100%; }
+		body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
 		
-		#info {
+		#infoPtr {
         display: block;
         position: absolute;
         top: 20px;
         left: 50%;
         transform: translate(-50%);
-        width: 50%;
+        width: 25%;
         padding: 10px;
         border: none;
         border-radius: 3px;
@@ -35,7 +36,9 @@
 </head>
 <body>
 <div id="map"></div>
-<pre id="info"></pre>
+<pre id="infoPtr"></pre>
+
+<script src="https://cdn.jsdelivr.net/gh/OrdnanceSurvey/os-api-branding@latest/os-api-branding.js"></script>
 <script type="module">
     import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.mjs';
 
@@ -155,21 +158,29 @@ const marker = new maplibregl.Marker()
 map.on('mousemove', (e) => {
 
 	var en = bngProj.forward( [ e.lngLat.lng, e.lngLat.lat ] );
+	var east = en[0].toFixed(0);
+	var north = en[1].toFixed(0);
+	en = {"east":east, "north":north};
+	
+	e.lngLat.lng = e.lngLat.lng.toFixed(6);
+	e.lngLat.lat = e.lngLat.lat.toFixed(6);
 
-        document.getElementById('info').innerHTML =
+	
+	e.point.y = e.point.y.toFixed(0);
+
+        document.getElementById('infoPtr').innerHTML =
             // e.point is the x, y coordinates of the mousemove event relative
             // to the top-left corner of the map
             `${JSON.stringify(e.point)
             }
 			<br />${
                 // e.lngLat is the longitude, latitude geographical position of the event
-                JSON.stringify(e.lngLat.wrap())}
+                JSON.stringify(e.lngLat)}
 			<br />${
                 // e.lngLat is the longitude, latitude geographical position of the event
                 JSON.stringify(en)}`;
 });
 
-// 50.515491,-2.456342
 
 </script>
 </body>
