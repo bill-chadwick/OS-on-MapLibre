@@ -1,8 +1,27 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<!-- IMPORTANT: This example uses HTTP Query Parameter and/or HTTP Header authentication as a simple way to get started. For public-facing websites, use a backend proxy to protect your API key. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+	<title>OS Maps API | OS Leisure maps reprojected in the browser, from EPSG:27700 to EPSG:3857 | MapLibre GL JS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/OrdnanceSurvey/os-api-branding@latest/os-api-branding.css" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<script src="https://cdn.jsdelivr.net/gh/OrdnanceSurvey/os-api-branding@latest/os-api-branding.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.12.1/dist/proj4.js"></script>
 <script src="warped_os_maplibre.js"></script>
-<div id="map" style="position:absolute; inset:0"></div>
+
 <script>
   registerWarpedOs(maplibregl, { key: 'yourkey' });
 
@@ -19,7 +38,7 @@
           tileSize: 256,
           minzoom: 6,
           maxzoom: 16,
-          attribution: "Contains OS data © Crown copyright and database rights"
+          attributionControl: false
         }
       },
       layers: [{ id: "os", type: "raster", source: "os" }]
@@ -38,3 +57,6 @@
   
   
 </script>
+
+</body>
+</html>
