@@ -6,7 +6,7 @@ os27700MapLibre.htm displays the map tiles in their native EPSG:27700 (British N
 
 warp_os_example.htm uses warped_os_maplibre.js to reproject EPSG27700 tiles to EPSG:3857 (Web Mercator), in the browser. This will be useful if you want to compose with other EPSG:3857 map layers. The grid shown on the map will be rotated.
 
-warp_os_3d_example.htm drapes OS50K mapping over 3d terrain from https://mapterhorn.com/
+warp_os_3d_example.htm drapes OS 50K mapping over 3d terrain from https://mapterhorn.com/
 
 
 Get your OS Maps API keys from here https://osdatahub.os.uk/
