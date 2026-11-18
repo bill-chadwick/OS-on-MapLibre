@@ -1,0 +1,105 @@
+<!-- IMPORTANT: This example uses HTTP Query Parameter and/or HTTP Header authentication as a simple way to get started. For public-facing websites, use a backend proxy to protect your API key. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+	<title>OS Maps API | OS Leisure maps reprojected in the browser, from EPSG:27700 to EPSG:3857 | MapLibre GL JS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/OrdnanceSurvey/os-api-branding@latest/os-api-branding.css" />
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<script src="https://cdn.jsdelivr.net/gh/OrdnanceSurvey/os-api-branding@latest/os-api-branding.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/proj4@2.12.1/dist/proj4.js"></script>
+<script src="warped_os_maplibre.js"></script>
+
+<script>
+  registerWarpedOs(maplibregl, { key: 'ZTNTcaqUVkWnGA0iIdACOSgVHboELfPK', lock50K:true });
+
+  const map = new maplibregl.Map({
+    container: "map",
+    center: [-2.968, 54.425],
+    zoom: 14,
+	pitch: 50,
+    style: {
+      version: 8,
+      sources: {
+        os: {
+          type: "raster",
+          tiles: ["wos://{z}/{x}/{y}"],
+          tileSize: 256,
+          minzoom: 6,
+          maxzoom: 16,
+          attributionControl: false
+        },
+		// Use a different source for terrain and hillshade layers, to improve render quality
+		terrainSource: {
+			type: 'raster-dem',
+			url: 'https://tiles.mapterhorn.com/tilejson.json'
+		},
+		hillshadeSource: {
+			type: 'raster-dem',
+			//url: 'https://tiles.mapterhorn.com/tilejson.json'
+			                        tiles: ['https://tiles.mapterhorn.com/{z}/{x}/{y}.webp'],
+                        encoding: 'terrarium',
+                        // tileSize: 256,
+                        tileSize: 512,
+		}
+      },
+      layers: [{ id: "os", type: "raster", source: "os" },             
+	  {
+                id: 'hills',
+                type: 'hillshade',
+                source: 'hillshadeSource',
+                layout: {visibility: 'visible'},
+                paint: {'hillshade-shadow-color': '#473B24'}
+            }],
+	   terrain: {
+            source: 'terrainSource',
+            exaggeration: 1
+        }		
+    },
+	    maxZoom: 18,
+    maxPitch: 85
+  });
+
+  
+  
+  map.addControl(
+    new maplibregl.NavigationControl({
+        visualizePitch: true,
+        showZoom: true,
+        showCompass: true
+    })
+);
+
+map.addControl(
+    new maplibregl.TerrainControl({
+        source: 'terrainSource',
+        exaggeration: 1
+    })
+);
+  
+  const popup = new maplibregl.Popup({offset: 25}).setText(
+    'Centre of the universe!'
+);
+  
+  const marker = new maplibregl.Marker()
+    .setLngLat([-2.646675, 51.248593])// The hunters
+	.setPopup(popup)
+    .addTo(map);
+  
+  
+</script>
+
+</body>
+</html>

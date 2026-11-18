@@ -12,14 +12,26 @@ proj4.defs(
 
 const TILE_SIZE = 256;
 const MIN_ZOOM = 6;
-const MAX_ZOOM = 16;
+const MAX_ZOOM = 16; // OS zooms 10-13 are high cost MasterMap, so limit to 25K.
 const TOP_LEFT_EASTING = -238375.0;
 const TOP_LEFT_NORTHING = 1376256.0;
 const URL_SKELETON = "https://api.os.uk/maps/raster/v1/zxy/{layer}/{z}/{x}/{y}.png?key={key}";
 
-// OS zoom levels from Google zoom level
-const O_ZOOM_FROM_GZOOM = [
-  0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 13, 13, 13
+// OS zoom levels from Google zoom level. OS 6 & 7 are 1:50K, 8 & 9 are 1:25K
+var O_ZOOM_FROM_GZOOM = [
+  0, 0, 0, 0, 0, 
+  0, 0, 0, 1, 2, 
+  3, 4, 5, 6, 7, 
+  8, 9, 10, 11, 12,
+  13, 13, 13, 13
+];
+
+const O_ZOOM_FROM_GZOOM_50K = [
+  0, 0, 0, 0, 0, 
+  0, 0, 0, 1, 2, 
+  6, 6, 6, 6, 7, 
+  7, 7, 10, 11, 12,
+  13, 13, 13, 13
 ];
 
 // index by OS zoom
@@ -27,7 +39,7 @@ const OS_LAYERS = [
   "Leisure_27700", "Leisure_27700", "Leisure_27700", "Leisure_27700",
   "Leisure_27700", "Leisure_27700", "Leisure_27700", "Leisure_27700",
   "Leisure_27700", "Leisure_27700",
-  "Outdoor_27700", "Outdoor_27700", "Outdoor_27700", "Outdoor_27700"
+  "Outdoor_27700", "Outdoor_27700", "Outdoor_27700", "Outdoor_27700" // 10-13 are high cost MasterMap
 ];
 
 // index by OS zoom to get metres per pixel
@@ -216,9 +228,16 @@ async function renderTile(z, x, y, key, layerOverride, signal) {
  * options.key:      OS Maps API key (required)
  * options.layer:    optional layer override, e.g. "Leisure_27700"
  * options.protocol: protocol name, default "wos"
+ * options.lock50K:  true to use 50K mapping at more zoom levels, e.g. for 3d terrain drape
  */
 function registerWarpedOs(maplibregl, options) {
   const protocol = options.protocol || "wos";
+  if (options.lock50K) {
+	  for (let i =0; i<O_ZOOM_FROM_GZOOM_50K.length;i++) {
+		  O_ZOOM_FROM_GZOOM[i] = O_ZOOM_FROM_GZOOM_50K[i];
+	  }
+  }
+  
   maplibregl.addProtocol(protocol, async (params, abortController) => {
     const m = /^[^:]+:\/\/(\d+)\/(\d+)\/(\d+)/.exec(params.url);
     if (!m) throw new Error("Bad tile URL: " + params.url);
