@@ -18,12 +18,13 @@
 <div id="map"></div>
 
 <script src="https://cdn.jsdelivr.net/gh/OrdnanceSurvey/os-api-branding@latest/os-api-branding.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.12.1/dist/proj4.js"></script>
 <script src="warped_os_maplibre.js"></script>
 
-<script>
-  registerWarpedOs(maplibregl, { key: 'yourkey', lock50K:true });
+<script type="module">
+    import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.18.0/dist/maplibre-gl.mjs';
+  registerWarpedOs(maplibregl, { key: 'ZTNTcaqUVkWnGA0iIdACOSgVHboELfPK', lock50K:true });
 
   const map = new maplibregl.Map({
     container: "map",
